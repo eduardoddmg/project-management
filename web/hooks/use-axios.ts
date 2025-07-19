@@ -7,6 +7,8 @@ interface AxiosState<T> {
   loading: boolean;
 }
 
+export const api = axios.create({ baseURL: 'http://localhost:3000' });
+
 export function useAxios<T = unknown>() {
   const [state, setState] = useState<AxiosState<T>>({
     data: null,
@@ -19,7 +21,7 @@ export function useAxios<T = unknown>() {
       setState({ data: null, error: null, loading: true });
 
       try {
-        const response: AxiosResponse<T> = await axios.request<T>(config);
+        const response: AxiosResponse<T> = await api.request<T>(config);
         setState({ data: response.data, error: null, loading: false });
         return response;
       } catch (error) {
