@@ -2,15 +2,11 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { z } from 'zod';
-import { api, useAxios } from '@/hooks/use-axios';
-import { DynamicForm, FormFieldConfig } from '@/components/ui/dynamic-form';
+import { useAxios, api } from '@/hooks/use-axios';
 import { toast } from 'sonner';
 import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
-
-const formSchema = z.object({
-  name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-});
+import { ProjectForm, projectFormSchema } from '@/components/project/form'; // Import the new component and schema
+import { z } from 'zod';
 
 export default function EditProjectPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,27 +14,18 @@ export default function EditProjectPage() {
 
   const { data, request, loading } = useAxios<{ id: string; name: string }>();
 
-  // Buscar os dados do projeto
+  // Fetch project data when the component mounts or ID changes
   useEffect(() => {
     if (id) {
       request({ url: `/project/${id}`, method: 'GET' });
     }
   }, [id, request]);
 
-  const formFields: FormFieldConfig[] = [
-    {
-      name: 'name',
-      label: 'Nome do projeto',
-      type: 'input',
-      placeholder: 'Digite o novo nome...',
-    },
-  ];
-
-  async function handleSubmit(values: z.infer<typeof formSchema>) {
+  async function handleSubmit(values: z.infer<typeof projectFormSchema>) {
     const response = await api.patch(`/project/${id}`, values);
 
     if (response?.status === 200) {
-      router.push('/project'); // ou atualize com router.refresh()
+      router.push('/project');
       toast.success('Projeto editado com sucesso!');
     } else {
       toast.error('Não foi possível editar');
@@ -48,7 +35,7 @@ export default function EditProjectPage() {
   if (loading || !data) return <p className="p-4">Carregando projeto...</p>;
 
   return (
-    <div className="w-full max-w-xl mx-auto p-6 bg-card rounded-xl shadow">
+    <div className="container mx-auto py-10">
       <AutoBreadcrumb
         items={[
           { label: 'Projetos', href: '/project' },
@@ -60,9 +47,7 @@ export default function EditProjectPage() {
       />
       <h1 className="text-2xl font-bold mb-6">Editar Projeto</h1>
 
-      <DynamicForm
-        formSchema={formSchema}
-        formFields={formFields}
+      <ProjectForm
         defaultValues={{ name: data.name }}
         onSubmit={handleSubmit}
         submitButtonText="Salvar alterações"

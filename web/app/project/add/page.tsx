@@ -1,13 +1,13 @@
 'use client';
 
-import { z } from 'zod';
-import { DynamicForm, FormFieldConfig } from '@/components/ui/dynamic-form';
-import { useAxios } from '@/hooks/use-axios';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
+import { useAxios } from '@/hooks/use-axios';
+import { ProjectForm, projectFormSchema } from '@/components/project/form'; // Import the new component and schema
+import { z } from 'zod';
 
-export default function HomePage() {
+export default function AddProjectPage() {
   const { request } = useAxios<{
     id: number;
     name: string;
@@ -15,29 +15,8 @@ export default function HomePage() {
 
   const router = useRouter();
 
-  // 1. Defina o esquema de validação com Zod
-  const formSchema = z.object({
-    name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-  });
-
-  // 2. Defina a configuração dos campos do formulário
-  const formFields: FormFieldConfig[] = [
-    {
-      name: 'name',
-      label: 'Nome do projeto',
-      type: 'input',
-      placeholder: 'Seu nome aqui...',
-    },
-  ];
-
-  // 3. Defina os valores padrão (podem vir de uma API, por exemplo)
-  const defaultValues = {
-    name: '',
-  };
-
-  // 4. Crie a função para lidar com o envio do formulário
-  // 5. Submit do formulário
-  async function handleFormSubmit(values: z.infer<typeof formSchema>) {
+  // Handle form submission for creating a new project
+  async function handleFormSubmit(values: z.infer<typeof projectFormSchema>) {
     const response = await request({
       url: '/project',
       method: 'POST',
@@ -46,7 +25,7 @@ export default function HomePage() {
 
     if (response) {
       console.log('Projeto criado:', response.data);
-      toast.success('Projeto addicionado com sucesso');
+      toast.success('Projeto adicionado com sucesso');
       router.push('/project');
     } else {
       toast.error('Não foi possível adicionar o projeto');
@@ -54,7 +33,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="w-full bg-card p-8 ">
+    <div className="container mx-auto py-10 ">
       <AutoBreadcrumb
         items={[
           { label: 'Projetos', href: '/project' },
@@ -65,12 +44,10 @@ export default function HomePage() {
         ]}
       />
       <h1 className="text-2xl font-bold mb-6">Adicionar projeto</h1>
-      <DynamicForm
-        formSchema={formSchema}
-        formFields={formFields}
+      <ProjectForm
+        defaultValues={{ name: '' }} // Default empty value for new project
         onSubmit={handleFormSubmit}
-        defaultValues={defaultValues}
-        submitButtonText="Enviar"
+        submitButtonText="Adicionar projeto"
       />
     </div>
   );
