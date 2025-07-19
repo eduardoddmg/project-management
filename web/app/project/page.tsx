@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
+import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
 
 type Project = {
   id: string;
@@ -25,7 +26,7 @@ const Page = () => {
 
   // Função para carregar a lista
   const fetchProjects = useCallback(() => {
-    request({ url: 'http://localhost:3000/project', method: 'GET' });
+    request({ url: '/project', method: 'GET' });
   }, [request]);
 
   // Carregar os dados ao montar
@@ -36,7 +37,7 @@ const Page = () => {
   // Função para deletar um projeto e atualizar a lista
   const handleDelete = async (id: string) => {
     const response = await request({
-      url: `http://localhost:3000/project/${id}`,
+      url: `/project/${id}`,
       method: 'DELETE',
     });
 
@@ -83,6 +84,7 @@ const Page = () => {
 
   return (
     <div className="container mx-auto py-10">
+      <AutoBreadcrumb items={[{ label: 'Projetos', href: '/project' }]} />
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Lista de Projetos</h1>
         <Link href="/project/add">

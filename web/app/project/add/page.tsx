@@ -5,6 +5,7 @@ import { DynamicForm, FormFieldConfig } from '@/components/ui/dynamic-form';
 import { useAxios } from '@/hooks/use-axios';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
 
 export default function HomePage() {
   const { request } = useAxios<{
@@ -38,7 +39,7 @@ export default function HomePage() {
   // 5. Submit do formulário
   async function handleFormSubmit(values: z.infer<typeof formSchema>) {
     const response = await request({
-      url: 'http://localhost:3000/project',
+      url: '/project',
       method: 'POST',
       data: values,
     });
@@ -54,6 +55,15 @@ export default function HomePage() {
 
   return (
     <div className="w-full bg-card p-8 ">
+      <AutoBreadcrumb
+        items={[
+          { label: 'Projetos', href: '/project' },
+          {
+            label: 'Adicionar projeto',
+            href: '',
+          },
+        ]}
+      />
       <h1 className="text-2xl font-bold mb-6">Adicionar projeto</h1>
       <DynamicForm
         formSchema={formSchema}

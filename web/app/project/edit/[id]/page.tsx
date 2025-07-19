@@ -3,9 +3,10 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useAxios } from '@/hooks/use-axios';
+import { api, useAxios } from '@/hooks/use-axios';
 import { DynamicForm, FormFieldConfig } from '@/components/ui/dynamic-form';
 import { toast } from 'sonner';
+import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
 
 const formSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
@@ -20,7 +21,7 @@ export default function EditProjectPage() {
   // Buscar os dados do projeto
   useEffect(() => {
     if (id) {
-      request({ url: `http://localhost:3000/project/${id}`, method: 'GET' });
+      request({ url: `/project/${id}`, method: 'GET' });
     }
   }, [id, request]);
 
@@ -34,11 +35,7 @@ export default function EditProjectPage() {
   ];
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
-    const response = await request({
-      url: `http://localhost:3000/project/${id}`,
-      method: 'PATCH',
-      data: values,
-    });
+    const response = await api.patch(`/project/${id}`, values);
 
     if (response?.status === 200) {
       router.push('/project'); // ou atualize com router.refresh()
@@ -52,6 +49,15 @@ export default function EditProjectPage() {
 
   return (
     <div className="w-full max-w-xl mx-auto p-6 bg-card rounded-xl shadow">
+      <AutoBreadcrumb
+        items={[
+          { label: 'Projetos', href: '/project' },
+          {
+            label: 'Editar projeto',
+            href: '',
+          },
+        ]}
+      />
       <h1 className="text-2xl font-bold mb-6">Editar Projeto</h1>
 
       <DynamicForm
