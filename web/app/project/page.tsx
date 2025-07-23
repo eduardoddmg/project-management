@@ -1,100 +1,152 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
-import { useAxios } from '@/hooks/use-axios';
-import { ColumnDef } from '@tanstack/react-table';
-import Link from 'next/link';
-import { useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
 import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useAxios, api } from '@/hooks/use-axios';
+import { ProjectForm, projectFormSchema } from '@/components/project/form';
+import { ProjectList } from '@/components/project/list'; // Corrected import path
 
 type Project = {
   id: string;
   name: string;
 };
 
-const Page = () => {
-  const { data, loading, request } = useAxios<Project[] | null>();
+export default function ProjectPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Função para carregar a lista
-  const fetchProjects = useCallback(() => {
-    request({ url: '/project', method: 'GET' });
-  }, [request]);
+  const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0); // New state to trigger refresh
 
-  // Carregar os dados ao montar
-  useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+  const {
+    data: projectToEdit,
+    loading: loadingProjectToEdit,
+    request: fetchProjectToEdit,
+  } = useAxios<Project>();
 
-  // Função para deletar um projeto e atualizar a lista
-  const handleDelete = async (id: string) => {
-    const response = await request({
-      url: `/project/${id}`,
-      method: 'DELETE',
-    });
-
-    if (response?.status === 200 || response?.status === 204) {
-      fetchProjects();
-    }
+  // Function to trigger refresh in ProjectList
+  const triggerListRefresh = () => {
+    setRefreshKey(prevKey => prevKey + 1);
   };
 
-  const columns: ColumnDef<Project>[] = [
-    {
-      accessorKey: 'id',
-      header: 'ID',
-    },
-    {
-      accessorKey: 'name',
-      header: 'NOME',
-    },
-    {
-      id: 'actions',
-      header: 'AÇÕES',
-      cell: ({ row }) => {
-        const project = row.original;
+  // Check URL params for edit/add dialog state
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setIsAddEditDialogOpen(true);
+    } else if (searchParams.get('action') === 'edit' && searchParams.get('id')) {
+      const id = searchParams.get('id');
+      setEditingProjectId(id);
+      setIsEditDialogOpen(true);
+      fetchProjectToEdit({ url: `/project/${id}`, method: 'GET' });
+    }
+  }, [searchParams, fetchProjectToEdit]);
 
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button>Ações</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/project/edit/${project.id}`}>
-                  <span>✏️ Editar</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDelete(project.id)}>
-                🗑️ Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ];
+  // --- Add Project Handlers ---
+  const handleOpenAddDialog = () => {
+    setIsAddEditDialogOpen(true);
+    router.push('/project?action=add');
+  };
+
+  const handleCloseAddDialog = () => {
+    setIsAddEditDialogOpen(false);
+    router.push('/project'); // Clear URL parameter
+  };
+
+  async function handleAddSubmit(values: z.infer<typeof projectFormSchema>) {
+    const response = await api.post('/project', values);
+
+    if (response?.status === 201) {
+      toast.success('Projeto adicionado com sucesso!');
+      handleCloseAddDialog();
+      triggerListRefresh(); // Trigger refresh after adding
+    } else {
+      toast.error('Não foi possível adicionar o projeto.');
+    }
+  }
+
+  // --- Edit Project Handlers ---
+  const handleOpenEditDialog = (id: string) => {
+    setEditingProjectId(id);
+    setIsEditDialogOpen(true);
+    router.push(`/project?action=edit&id=${id}`);
+    fetchProjectToEdit({ url: `/project/${id}`, method: 'GET' });
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingProjectId(null);
+    router.push('/project'); // Clear URL parameters
+  };
+
+  async function handleEditSubmit(values: z.infer<typeof projectFormSchema>) {
+    if (!editingProjectId) return;
+
+    const response = await api.patch(`/project/${editingProjectId}`, values);
+
+    if (response?.status === 200) {
+      toast.success('Projeto editado com sucesso!');
+      handleCloseEditDialog();
+      triggerListRefresh(); // Trigger refresh after editing
+    } else {
+      toast.error('Não foi possível editar o projeto.');
+    }
+  }
 
   return (
     <div className="container mx-auto py-10">
       <AutoBreadcrumb items={[{ label: 'Projetos', href: '/project' }]} />
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Lista de Projetos</h1>
-        <Link href="/project/add">
-          <Button>Adicionar</Button>
-        </Link>
-      </div>
 
-      <DataTable columns={columns} data={data || []} loading={loading} />
+      <ProjectList
+        onAddProject={handleOpenAddDialog}
+        onEditProject={handleOpenEditDialog}
+        refreshTrigger={refreshKey} // Pass the refreshKey
+      />
+
+      {/* Add Project Dialog */}
+      <Dialog open={isAddEditDialogOpen} onOpenChange={handleCloseAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Projeto</DialogTitle>
+          </DialogHeader>
+          <ProjectForm
+            defaultValues={{ name: '' }}
+            onSubmit={handleAddSubmit}
+            submitButtonText="Adicionar Projeto"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={handleCloseEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Projeto</DialogTitle>
+          </DialogHeader>
+          {loadingProjectToEdit ? (
+            <p>Carregando dados do projeto...</p>
+          ) : projectToEdit ? (
+            <ProjectForm
+              defaultValues={{ name: projectToEdit.name }}
+              onSubmit={handleEditSubmit}
+              submitButtonText="Salvar Alterações"
+            />
+          ) : (
+            <p>Não foi possível carregar o projeto para edição.</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default Page;
+}

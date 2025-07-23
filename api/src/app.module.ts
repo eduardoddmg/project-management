@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProjectModule } from './project/project.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProjectMemberModule } from './project-member/project-member.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: true, // Automatically synchronize database schema (use ONLY for development!)
       logging: ['query', 'error'], // Enable logging for queries and errors
     }),
+    ProjectMemberModule,
   ],
   controllers: [AppController],
   providers: [AppService],

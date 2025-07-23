@@ -21,12 +21,14 @@ export class ProjectService {
 
   async findAll(): Promise<Project[]> {
     // Busca todos os projetos no banco de dados
-    return this.projectRepository.find();
+    return this.projectRepository.find({
+      relations: ['projectMembers'], // Inclui a relação com projectMembers, se necessário
+    });
   }
 
   async findOne(id: number): Promise<Project> {
     // Busca um projeto pelo ID. O `where` é crucial para especificar a condição.
-    const project = await this.projectRepository.findOne({ where: { id } });
+    const project = await this.projectRepository.findOne({ where: { id }, relations: ['projectMembers'] });
     if (!project) {
       throw new NotFoundException(`Project with ID ${id} not found.`);
     }
