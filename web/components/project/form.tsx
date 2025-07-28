@@ -3,15 +3,13 @@
 import { z } from 'zod';
 import { DynamicForm, FormFieldConfig } from '@/components/ui/dynamic-form';
 
-// Define the Zod schema for project validation
-export const projectFormSchema = z.object({
+export const formSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
 });
 
-// Define the props for the ProjectForm component
-interface ProjectFormProps {
-  defaultValues: z.infer<typeof projectFormSchema>;
-  onSubmit: (values: z.infer<typeof projectFormSchema>) => void;
+interface FormProps {
+  defaultValues: z.infer<typeof formSchema>;
+  onSubmit: (values: z.infer<typeof formSchema>) => void;
   submitButtonText: string;
 }
 
@@ -19,8 +17,7 @@ export function ProjectForm({
   defaultValues,
   onSubmit,
   submitButtonText,
-}: ProjectFormProps) {
-  // Define the form field configuration
+}: FormProps) {
   const formFields: FormFieldConfig[] = [
     {
       name: 'name',
@@ -32,7 +29,7 @@ export function ProjectForm({
 
   return (
     <DynamicForm
-      formSchema={projectFormSchema}
+      formSchema={formSchema}
       formFields={formFields}
       defaultValues={defaultValues}
       onSubmit={onSubmit}
