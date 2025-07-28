@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
 import { ProjectForm, projectFormSchema } from '@/components/project/form'; // Import the new component and schema
 import { z } from 'zod';
+import { Title } from '@/components/ui/title';
+import { Container } from '@/components/ui/container';
 
 export default function EditProjectPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +16,6 @@ export default function EditProjectPage() {
 
   const { data, request, loading } = useAxios<{ id: string; name: string }>();
 
-  // Fetch project data when the component mounts or ID changes
   useEffect(() => {
     if (id) {
       request({ url: `/project/${id}`, method: 'GET' });
@@ -35,7 +36,7 @@ export default function EditProjectPage() {
   if (loading || !data) return <p className="p-4">Carregando projeto...</p>;
 
   return (
-    <div className="container mx-auto py-10">
+    <Container>
       <AutoBreadcrumb
         items={[
           { label: 'Projetos', href: '/project' },
@@ -45,13 +46,13 @@ export default function EditProjectPage() {
           },
         ]}
       />
-      <h1 className="text-2xl font-bold mb-6">Editar Projeto</h1>
+      <Title>Editar Projeto</Title>
 
       <ProjectForm
         defaultValues={{ name: data.name }}
         onSubmit={handleSubmit}
         submitButtonText="Salvar alterações"
       />
-    </div>
+    </Container>
   );
 }

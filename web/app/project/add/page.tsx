@@ -6,6 +6,8 @@ import { AutoBreadcrumb } from '@/components/ui/breadcrumb';
 import { useAxios } from '@/hooks/use-axios';
 import { ProjectForm, projectFormSchema } from '@/components/project/form'; // Import the new component and schema
 import { z } from 'zod';
+import { Title } from '@/components/ui/title';
+import { Container } from '@/components/ui/container';
 
 export default function AddProjectPage() {
   const { request } = useAxios<{
@@ -33,7 +35,7 @@ export default function AddProjectPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 ">
+    <Container>
       <AutoBreadcrumb
         items={[
           { label: 'Projetos', href: '/project' },
@@ -43,12 +45,12 @@ export default function AddProjectPage() {
           },
         ]}
       />
-      <h1 className="text-2xl font-bold mb-6">Adicionar projeto</h1>
+      <Title>Adicionar projeto</Title>
       <ProjectForm
         defaultValues={{ name: '' }} // Default empty value for new project
         onSubmit={handleFormSubmit}
         submitButtonText="Adicionar projeto"
       />
-    </div>
+    </Container>
   );
 }
