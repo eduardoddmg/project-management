@@ -1,15 +1,9 @@
-import Link from 'next/link';
-import { Button } from '../ui/button';
 import { DataTable } from '../ui/data-table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+import { ColumnDef } from '@tanstack/react-table';
 import { useAxios } from '@/hooks/use-axios';
 import { useCallback, useEffect } from 'react';
-import { ColumnDef } from '@tanstack/react-table';
+import { ActionDropdown, ActionItem } from '../ui/action-dropdown';
+import { Pen, Trash } from 'lucide-react';
 
 type Project = {
   id: string;
@@ -53,25 +47,31 @@ export const ProjectList = () => {
       cell: ({ row }) => {
         const project = row.original;
 
+        const projectActions: ActionItem[] = [
+          {
+            type: 'edit',
+            label: 'Editar',
+            icon: Pen,
+            link: `/project/edit/${project.id}`,
+          },
+          {
+            type: 'delete',
+            label: 'Excluir',
+            icon: Trash,
+            onClick: handleDelete, // Passa a referência da função
+          },
+        ];
+
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button>Ações</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/project/edit/${project.id}`}>
-                  <span>✏️ Editar</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDelete(project.id)}>
-                🗑️ Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionDropdown
+            itemId={project.id}
+            itemName={project.name}
+            actions={projectActions}
+          />
         );
       },
     },
   ];
+
   return <DataTable columns={columns} data={data || []} loading={loading} />;
 };

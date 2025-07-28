@@ -17,7 +17,6 @@ export default function AddProjectPage() {
 
   const router = useRouter();
 
-  // Handle form submission for creating a new project
   async function handleFormSubmit(values: z.infer<typeof projectFormSchema>) {
     const response = await request({
       url: '/project',
@@ -26,7 +25,6 @@ export default function AddProjectPage() {
     });
 
     if (response) {
-      console.log('Projeto criado:', response.data);
       toast.success('Projeto adicionado com sucesso');
       router.push('/project');
     } else {
